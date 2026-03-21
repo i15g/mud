@@ -36,8 +36,8 @@ func TestSanitize(t *testing.T) {
 		{"a,b", "a-b"},
 		{"a+b", "a-b"},
 		{"a,,b", "a--b"},
-		{"a,,,b", "a--b"},  // 3 commas → 3 hyphens → collapsed to 2
-		{"a+++b", "a--b"},  // 3 plus → 3 hyphens → collapsed to 2
+		{"a,,,b", "a--b"}, // 3 commas → 3 hyphens → collapsed to 2
+		{"a+++b", "a--b"}, // 3 plus → 3 hyphens → collapsed to 2
 
 		// Hyphen collapsing
 		{"foo----bar", "foo--bar"},
