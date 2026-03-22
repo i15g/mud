@@ -1,0 +1,11 @@
+- [`svu`](https://github.com/caarlos0/svu) for automated semver tagging
+    - tag via CICD instead?
+    - CHANGELOG.md
+- argparse? [`pflag`](https://github.com/spf13/pflag) — POSIX flags (`--long`, `-s`, combined `-rd`);
+    - `fs.PrintDefaults()` auto-generates the flags help section — kills the handcrafted usage blob
+    - Or just use [cobra](https://github.com/spf13/cobra), which uses pflag under the hood, maybe too heavy tho
+- script to test realworld usage
+    - mkdir ./tmp (gitignored)
+    - touch FOO
+    - mud FOO
+    - assert(ls tmp, expected)

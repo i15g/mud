@@ -22,10 +22,6 @@ mud [options] <filename|text>
 
 See top of [main.go](main.go)
 
-## Todo
-
-- Look into [`svu`](https://github.com/caarlos0/svu) for automated semver tagging
-
 ## License
 
 MIT
