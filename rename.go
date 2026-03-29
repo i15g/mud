@@ -2,16 +2,31 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
 )
 
+var (
+	stdout io.Writer = os.Stdout
+	stderr io.Writer = os.Stderr
+)
+
+type renameOpts struct {
+	dryRun      bool
+	quiet       bool
+	verbose     bool
+	interactive bool
+	force       bool
+	input       io.Reader // for interactive prompt; nil = os.Stdin
+}
+
 // runRename sanitizes the basename of input and renames it in-place.
 // It silently skips if the name is already clean or the target already exists
 // (as a different file). Returns an error only if the rename itself fails.
-func runRename(input string, dryRun, quiet bool) error {
+func runRename(input string, opts renameOpts) error {
 	dir := filepath.Dir(input)
 	base := filepath.Base(input)
 	sanitized := Sanitize(base)
@@ -37,8 +52,8 @@ func runRename(input string, dryRun, quiet bool) error {
 		}
 	}
 
-	if dryRun {
-		fmt.Printf("%s --> %s\n(dry run)\n", input, output)
+	if opts.dryRun {
+		fmt.Fprintf(stdout, "%s --> %s\n(dry run)\n", input, output)
 		return nil
 	}
 
@@ -46,10 +61,10 @@ func runRename(input string, dryRun, quiet bool) error {
 		return err
 	}
 
-	if quiet {
-		fmt.Println(output)
+	if opts.quiet {
+		fmt.Fprintln(stdout, output)
 	} else {
-		fmt.Printf("%s -> %s\n", input, output)
+		fmt.Fprintf(stdout, "%s -> %s\n", input, output)
 	}
 	return nil
 }
@@ -70,7 +85,7 @@ func sameFile(a, b string) bool {
 // runRecursive renames all files and directories under target (default "."),
 // processing children before parents (bottom-up) so parent renames don't
 // invalidate child paths.
-func runRecursive(target string, dryRun, quiet bool) error {
+func runRecursive(target string, opts renameOpts) error {
 	if target == "" {
 		target = "."
 	}
@@ -98,7 +113,7 @@ func runRecursive(target string, dryRun, quiet bool) error {
 	sort.Sort(sort.Reverse(sort.StringSlice(paths)))
 
 	for _, p := range paths {
-		if err := runRename(p, dryRun, quiet); err != nil {
+		if err := runRename(p, opts); err != nil {
 			return fmt.Errorf("%s: %w", p, err)
 		}
 	}

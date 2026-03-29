@@ -112,7 +112,8 @@ func main() {
 		if len(opts.args) > 0 {
 			target = opts.args[0]
 		}
-		if err := runRecursive(target, opts.dryRun, opts.quietMode); err != nil {
+		rOpts := renameOpts{dryRun: opts.dryRun, quiet: opts.quietMode}
+		if err := runRecursive(target, rOpts); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
@@ -131,7 +132,8 @@ func main() {
 		return
 	}
 
-	if err := runRename(input, opts.dryRun, opts.quietMode); err != nil {
+	rOpts := renameOpts{dryRun: opts.dryRun, quiet: opts.quietMode}
+	if err := runRename(input, rOpts); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

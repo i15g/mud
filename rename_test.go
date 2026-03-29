@@ -12,7 +12,7 @@ func TestRunRename_Basic(t *testing.T) {
 	src := filepath.Join(dir, "My File.TXT")
 	writeFile(t, src, "content")
 
-	if err := runRename(src, false, false); err != nil {
+	if err := runRename(src, renameOpts{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -26,7 +26,7 @@ func TestRunRename_AlreadyClean(t *testing.T) {
 	src := filepath.Join(dir, "already-clean.txt")
 	writeFile(t, src, "content")
 
-	if err := runRename(src, false, false); err != nil {
+	if err := runRename(src, renameOpts{}); err != nil {
 		t.Fatal(err)
 	}
 	// File should still exist at original path
@@ -40,7 +40,7 @@ func TestRunRename_NoClobber(t *testing.T) {
 	writeFile(t, src, "source")
 	writeFile(t, dst, "existing")
 
-	if err := runRename(src, false, false); err != nil {
+	if err := runRename(src, renameOpts{}); err != nil {
 		t.Fatal(err)
 	}
 	// Source should still exist (rename skipped)
@@ -57,7 +57,7 @@ func TestRunRename_DryRun(t *testing.T) {
 	src := filepath.Join(dir, "My File.txt")
 	writeFile(t, src, "content")
 
-	if err := runRename(src, true, false); err != nil {
+	if err := runRename(src, renameOpts{dryRun: true}); err != nil {
 		t.Fatal(err)
 	}
 	// Source must still exist after dry run
@@ -71,7 +71,7 @@ func TestRunRename_Quiet(t *testing.T) {
 	src := filepath.Join(dir, "My File.txt")
 	writeFile(t, src, "content")
 
-	if err := runRename(src, false, true); err != nil {
+	if err := runRename(src, renameOpts{quiet: true}); err != nil {
 		t.Fatal(err)
 	}
 	assertExists(t, filepath.Join(dir, "my-file.txt"))
@@ -88,7 +88,7 @@ func TestRunRecursive_BottomUp(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(subdir, "My File.txt"), "content")
 
-	if err := runRecursive(dir, false, false); err != nil {
+	if err := runRecursive(dir, renameOpts{}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -104,7 +104,7 @@ func TestRunRecursive_DryRun(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(subdir, "My File.txt"), "content")
 
-	if err := runRecursive(dir, true, false); err != nil {
+	if err := runRecursive(dir, renameOpts{dryRun: true}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -122,7 +122,7 @@ func TestRunRecursive_SkipsGit(t *testing.T) {
 	writeFile(t, filepath.Join(gitDir, "HEAD"), "ref: refs/heads/main")
 	writeFile(t, filepath.Join(dir, "My File.txt"), "content")
 
-	if err := runRecursive(dir, false, false); err != nil {
+	if err := runRecursive(dir, renameOpts{}); err != nil {
 		t.Fatal(err)
 	}
 
