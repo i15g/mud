@@ -36,11 +36,11 @@ func extractExtensions(name string) (string, string) {
 
 // Sanitize converts a filename (or text) to a URL-friendly format:
 //   - Lowercase
-//   - Spaces, newlines, underscores, commas, plus signs → hyphens
+//   - Separators (spaces, parens, brackets, etc.) → hyphens
 //   - 3+ consecutive hyphens → 2 hyphens
-//   - Non-[a-z0-9.-] characters removed
+//   - Non-[a-z0-9-] characters removed
 //   - Leading/trailing hyphens removed
-//   - Leading dots, leading underscores, and last file extension preserved
+//   - Leading dots, leading underscores, and up to 2 trailing extensions preserved
 func Sanitize(name string) string {
 	// 1. Strip leading dots
 	var leadingDots string
@@ -63,10 +63,11 @@ func Sanitize(name string) string {
 	// 4. Lowercase
 	name = strings.ToLower(name)
 
-	// 5. Replace [ \n_,+] with hyphens (byte-level, all ASCII)
+	// 5. Replace separators with hyphens
 	name = strings.Map(func(r rune) rune {
 		switch r {
-		case ' ', '\n', '_', ',', '+':
+		case ' ', '\n', '_', ',', '+', '.', '\u2014', '\u2013',
+			';', ':', '(', ')', '{', '}', '[', ']', '|':
 			return '-'
 		}
 		return r
@@ -75,9 +76,9 @@ func Sanitize(name string) string {
 	// 6. Collapse 3+ consecutive hyphens to 2
 	name = collapseHyphens(name)
 
-	// 7. Remove chars not in [a-z0-9.-]
+	// 7. Remove chars not in [a-z0-9-]
 	name = strings.Map(func(r rune) rune {
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' || r == '.' {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
 			return r
 		}
 		return -1 // drop

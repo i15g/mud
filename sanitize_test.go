@@ -14,7 +14,7 @@ func TestSanitize(t *testing.T) {
 		{".bashrc", ".bashrc"},
 		{".foo bar", ".foo-bar"},
 		{"_private file", "_private-file"},
-		{"My File (2024).txt", "my-file-2024.txt"},
+		{"My File (2024).txt", "my-file--2024.txt"},
 		{"foo.bar.baz", "foo.bar.baz"},
 		{"foo---bar", "foo--bar"},
 		{"hello world 2024", "hello-world-2024"},
@@ -49,7 +49,7 @@ func TestSanitize(t *testing.T) {
 		{"--foo--", "foo"},
 
 		// Non-alphanumeric removal
-		{"foo(bar)", "foobar"},
+		{"foo(bar)", "foo-bar"},
 		{"café", "caf"},   // é removed
 		{"naïve", "nave"}, // ï removed
 
@@ -79,10 +79,20 @@ func TestSanitize(t *testing.T) {
 
 		// Multi-extension (v2)
 		{"foo.tar.gz", "foo.tar.gz"},
-		{"My.Config.File.txt", "my.config.file.txt"},                   // updated to my-config.file.txt in Task 2
-		{"hello world.foo bar baz.txt", "hello-world.foo-bar-baz.txt"}, // updated to hello-world-foo-bar-baz.txt in Task 2
+		{"My.Config.File.txt", "my-config.file.txt"},
+		{"hello world.foo bar baz.txt", "hello-world-foo-bar-baz.txt"},
 		{"archive.tar.GZ", "archive.tar.gz"},
 		{"_.txt", "_.txt"},
+
+		// New separators (v2)
+		{"foo(bar).txt", "foo-bar.txt"},
+		{"foo[1].txt", "foo-1.txt"},
+		{"a;b", "a-b"},
+		{"a:b", "a-b"},
+		{"a|b", "a-b"},
+		{"a\u2014b", "a-b"}, // em dash
+		{"a\u2013b", "a-b"}, // en dash
+		{"a{b}", "a-b"},
 	}
 
 	for _, tt := range tests {
