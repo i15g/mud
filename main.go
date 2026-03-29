@@ -1,140 +1,130 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"os"
+
+	"github.com/spf13/pflag"
 )
 
-const usageText = `Usage: mud [options] <filename|text>
+func run(args []string, stdin io.Reader, isTTY bool) int {
+	fs := pflag.NewFlagSet("mud", pflag.ContinueOnError)
+	fs.SortFlags = false
 
-Rename file to URL-friendly format:
-  - Convert to lowercase
-  - Replace spaces, underscores, commas, plus with hyphens
-  - Remove non-alphanumeric characters (except hyphens and periods)
-  - Collapse 3+ hyphens to 2
-  - Preserve periods and leading underscore prefix
+	var (
+		dryRun      bool
+		quiet       bool
+		verbose     bool
+		interactive bool
+		force       bool
+		recursive   bool
+		help        bool
+	)
 
-Options:
-  -h, --help        Show this help
-  -d, --dry-run     Sanitize filename and show what would be renamed
-  -t, --text        Sanitize text and output result (don't rename file)
-  -q, --quiet       Rename file and output only the new path
-  -r, --recursive   Rename all files/dirs under path (bottom-up)
+	fs.BoolVarP(&dryRun, "dry-run", "n", false, "Show what would be renamed without renaming")
+	fs.BoolVarP(&quiet, "quiet", "q", false, "Suppress all output")
+	fs.BoolVarP(&verbose, "verbose", "v", false, "Print old -> new for each rename")
+	fs.BoolVarP(&interactive, "interactive", "i", false, "Prompt before each rename")
+	fs.BoolVarP(&force, "force", "f", false, "Bypass ignore patterns")
+	fs.BoolVarP(&recursive, "recursive", "r", false, "Rename all files/dirs under path (bottom-up)")
+	fs.BoolVarP(&help, "help", "h", false, "Show help")
 
-Examples:
-  FOO                  -->  foo
-  foo bar              -->  foo-bar
-  foo_bar              -->  foo-bar
-  .bashrc              -->  .bashrc
-  .foo bar             -->  .foo-bar
-  _private file        -->  _private-file
-  My File (2024).txt   -->  my-file-2024.txt
-  foo.bar.baz          -->  foo.bar.baz
-  foo---bar            -->  foo--bar
-  hello world 2024     -->  hello-world-2024
-`
+	fs.SetOutput(stderr)
+	if err := fs.Parse(args); err != nil {
+		return 1
+	}
 
-type options struct {
-	dryRun    bool
-	textMode  bool
-	quietMode bool
-	recursive bool
-	help      bool
-	args      []string
+	if help {
+		printUsage(fs)
+		return 0
+	}
+
+	opts := renameOpts{
+		dryRun:      dryRun,
+		quiet:       quiet,
+		verbose:     verbose,
+		interactive: interactive,
+		force:       force,
+	}
+
+	positional := fs.Args()
+
+	// Interactive requires a TTY
+	if interactive && !isTTY {
+		fmt.Fprintln(stderr, "mud: -i requires an interactive terminal")
+		return 1
+	}
+
+	// Recursive mode
+	if recursive {
+		target := ""
+		if len(positional) > 0 {
+			target = positional[0]
+		}
+		if err := runRecursive(target, opts); err != nil {
+			fmt.Fprintf(stderr, "mud: %s\n", err)
+			return 1
+		}
+		return 0
+	}
+
+	// Stdin mode: not a TTY, no positional args
+	if !isTTY && len(positional) == 0 {
+		data, err := io.ReadAll(stdin)
+		if err != nil {
+			fmt.Fprintf(stderr, "mud: %s\n", err)
+			return 1
+		}
+		input := string(data)
+		// Trim single trailing newline if present (shell echo adds one)
+		if len(input) > 0 && input[len(input)-1] == '\n' {
+			input = input[:len(input)-1]
+		}
+		fmt.Fprintln(stdout, Sanitize(input))
+		return 0
+	}
+
+	// No args
+	if len(positional) == 0 {
+		printUsage(fs)
+		return 1
+	}
+
+	// Multi-arg iteration
+	exitCode := 0
+	for _, arg := range positional {
+		if err := runRename(arg, opts); err != nil {
+			if errors.Is(err, errQuit) {
+				return 0 // user quit — exit zero
+			}
+			fmt.Fprintf(stderr, "mud: %s\n", err)
+			exitCode = 1
+		}
+	}
+	return exitCode
 }
 
-func parseArgs(argv []string) (options, error) {
-	var opts options
-	i := 0
-	for i < len(argv) {
-		arg := argv[i]
-		if arg == "--" {
-			opts.args = append(opts.args, argv[i+1:]...)
-			break
-		}
-		if len(arg) > 1 && arg[0] == '-' && arg[1] != '-' {
-			// Short flag(s): -d, -rd, etc.
-			for _, ch := range arg[1:] {
-				switch ch {
-				case 'h':
-					opts.help = true
-				case 'd':
-					opts.dryRun = true
-				case 't':
-					opts.textMode = true
-				case 'q':
-					opts.quietMode = true
-				case 'r':
-					opts.recursive = true
-				default:
-					return opts, fmt.Errorf("unknown flag: -%c", ch)
-				}
-			}
-		} else if len(arg) > 2 && arg[:2] == "--" {
-			switch arg {
-			case "--help":
-				opts.help = true
-			case "--dry-run":
-				opts.dryRun = true
-			case "--text":
-				opts.textMode = true
-			case "--quiet":
-				opts.quietMode = true
-			case "--recursive":
-				opts.recursive = true
-			default:
-				return opts, fmt.Errorf("unknown flag: %s", arg)
-			}
-		} else {
-			// First non-flag argument — rest are positional
-			opts.args = append(opts.args, argv[i:]...)
-			break
-		}
-		i++
-	}
-	return opts, nil
+func printUsage(fs *pflag.FlagSet) {
+	fmt.Fprint(stderr, `Usage: mud [flags] <file>...
+
+Rename files to URL-friendly format.
+
+Flags:
+`)
+	fs.PrintDefaults()
+	fmt.Fprint(stderr, `
+Examples:
+  mud "My File.txt"           Rename to my-file.txt
+  mud -n FOO.txt BAR.txt      Preview renames (dry run)
+  mud -r .                    Rename all files recursively
+  echo "Hello World" | mud    Sanitize text from stdin
+`)
 }
 
 func main() {
-	opts, err := parseArgs(os.Args[1:])
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-	if opts.help {
-		fmt.Print(usageText)
-		os.Exit(0)
-	}
-
-	if opts.recursive {
-		target := ""
-		if len(opts.args) > 0 {
-			target = opts.args[0]
-		}
-		rOpts := renameOpts{dryRun: opts.dryRun, quiet: opts.quietMode}
-		if err := runRecursive(target, rOpts); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		return
-	}
-
-	if len(opts.args) == 0 {
-		fmt.Fprint(os.Stderr, usageText)
-		os.Exit(1)
-	}
-
-	input := opts.args[0]
-
-	if opts.textMode {
-		fmt.Println(Sanitize(input))
-		return
-	}
-
-	rOpts := renameOpts{dryRun: opts.dryRun, quiet: opts.quietMode}
-	if err := runRename(input, rOpts); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
+	fi, _ := os.Stdin.Stat()
+	isTTY := fi.Mode()&os.ModeCharDevice != 0
+	os.Exit(run(os.Args[1:], os.Stdin, isTTY))
 }
