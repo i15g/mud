@@ -48,10 +48,10 @@ func TestSanitize(t *testing.T) {
 		{"-foo-", "foo"},
 		{"--foo--", "foo"},
 
-		// Non-alphanumeric removal
-		{"foo(bar)", "foo-bar"},
-		{"café", "caf"},   // é removed
-		{"naïve", "nave"}, // ï removed
+		// Non-alphanumeric removal (v1 behavior - accents stripped)
+		// In v2, accents are normalized instead of removed
+		{"café", "cafe"},   // é → e
+		{"naïve", "naive"}, // ï → i
 
 		// Newline
 		{"a\nb", "a-b"},
@@ -93,6 +93,22 @@ func TestSanitize(t *testing.T) {
 		{"a\u2014b", "a-b"}, // em dash
 		{"a\u2013b", "a-b"}, // en dash
 		{"a{b}", "a-b"},
+
+		// URL decoding (v2 step 0)
+		{"hello%20world.txt", "hello-world.txt"},
+		{"foo%28bar%29.txt", "foo-bar.txt"},
+
+		// Accent normalization (v2 step 1)
+		{"\u00c9tude.txt", "etude.txt"},   // É → e
+		{"stra\u00dfe", "strasse"},        // ß → ss
+		{"pi\u00f1ata", "pinata"},         // ñ → n
+		{"fa\u00e7ade", "facade"},         // ç → c
+		{"\u00e0 la carte", "a-la-carte"}, // à → a
+
+		// Special replacements (v2 step 6)
+		{"foo@bar", "foo-at-bar"},
+		{"a&b", "a-and-b"},
+		{"@foo.txt", "at-foo.txt"},
 	}
 
 	for _, tt := range tests {
