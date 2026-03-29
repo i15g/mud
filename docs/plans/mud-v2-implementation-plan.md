@@ -1,9 +1,8 @@
 ---
 title: mud v2 Implementation Plan
 status: done
+notes: implemented by Copilot CLI using Claude Haiku 4.5
 ---
-
-# mud v2 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
