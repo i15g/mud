@@ -1415,7 +1415,7 @@ git commit -m "feat: pflag migration, stdin detection, multi-arg support"
 - Modify: `rename_test.go` (add recursive + ignore integration test)
 - Modify: `README.md`
 
-- [ ] **Step 1: Write integration test for recursive + ignore**
+- [x] **Step 1: Write integration test for recursive + ignore**
 
 Add to `rename_test.go`:
 
@@ -1462,12 +1462,12 @@ func TestRunRecursive_ContinuesOnError(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run tests**
+- [x] **Step 2: Run tests**
 
 Run: `go test -v ./...`
 Expected: All pass.
 
-- [ ] **Step 3: Update README.md**
+- [x] **Step 3: Update README.md**
 
 Update the usage examples and flag documentation to reflect v2 changes:
 
@@ -1477,7 +1477,7 @@ Update the usage examples and flag documentation to reflect v2 changes:
 - Update output mode descriptions
 - Add stdin pipe example
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add rename_test.go README.md
