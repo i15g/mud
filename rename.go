@@ -67,6 +67,24 @@ func runRename(input string, opts renameOpts) error {
 		return nil
 	}
 
+	// Interactive prompt
+	if opts.interactive {
+		r := opts.input
+		if r == nil {
+			r = os.Stdin
+		}
+		action, err := promptRename(input, output, r)
+		if err != nil {
+			return err
+		}
+		switch action {
+		case 'n':
+			return nil
+		case 'q':
+			return errQuit
+		}
+	}
+
 	// Rename
 	if err := os.Rename(input, output); err != nil {
 		return err
@@ -92,6 +110,34 @@ func sameFile(a, b string) bool {
 		return false
 	}
 	return os.SameFile(ia, ib)
+}
+
+// promptRename prompts the user for confirmation of a rename.
+// Returns 'y', 'n', or 'q' for yes, no, or quit.
+func promptRename(oldName, newName string, r io.Reader) (byte, error) {
+	fmt.Fprintf(stderr, "rename %s → %s? [y/n/q] ", oldName, newName)
+	buf := make([]byte, 1)
+	for {
+		n, err := r.Read(buf)
+		if err != nil {
+			return 0, err
+		}
+		if n == 0 {
+			continue
+		}
+		switch buf[0] {
+		case 'y', 'Y':
+			return 'y', nil
+		case 'n', 'N':
+			return 'n', nil
+		case 'q', 'Q':
+			return 'q', nil
+		case '\n', '\r':
+			continue
+		default:
+			fmt.Fprintf(stderr, "rename %s → %s? [y/n/q] ", oldName, newName)
+		}
+	}
 }
 
 // runRecursive renames all files and directories under target (default "."),

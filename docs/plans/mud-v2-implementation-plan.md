@@ -27,14 +27,12 @@
 
 ---
 
-## Task 1: Sanitize — Multi-Extension Extraction
-
 **Files:**
 
 - Modify: `sanitize.go`
 - Modify: `sanitize_test.go`
 
-- [ ] **Step 1: Write failing tests for multi-extension behavior**
+- [x] **Step 1: Write failing tests for multi-extension behavior**
 
 Add these cases to the `tests` slice in `TestSanitize`:
 
@@ -57,12 +55,12 @@ Actually, to keep tests green at each commit, use the interim expectation:
 {"My.Config.File.txt", "my.config.file.txt"}, // updated to my-config.file.txt in Task 2
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `go test -run TestSanitize -v ./...`
 Expected: `foo.tar.gz` may already pass (coincidence — v1 extracts `.gz`, stem `foo.tar`, period preserved). `My.Config.File.txt` will fail. `hello world.foo bar baz.txt` will fail.
 
-- [ ] **Step 3: Implement `extractExtensions` helper and `isAlphanumeric` helper**
+- [x] **Step 3: Implement `extractExtensions` helper and `isAlphanumeric` helper**
 
 Add to `sanitize.go`:
 
@@ -184,7 +182,7 @@ func isAlphanumeric(s string) bool {
 }
 ```
 
-- [ ] **Step 4: Replace extension extraction in `Sanitize` with `extractExtensions`**
+- [x] **Step 4: Replace extension extraction in `Sanitize` with `extractExtensions`**
 
 In `sanitize.go`, replace lines 20-25:
 
@@ -207,12 +205,12 @@ var ext string
 name, ext = extractExtensions(name)
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `go test -run TestSanitize -v ./...`
 Expected: All tests pass (including existing ones — multi-extension extraction produces the same results for all existing test inputs).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add sanitize.go sanitize_test.go
@@ -221,14 +219,12 @@ git commit -m "feat: multi-extension extraction in Sanitize pipeline"
 
 ---
 
-## Task 2: Sanitize — New Separators and Character Filter
-
 **Files:**
 
 - Modify: `sanitize.go`
 - Modify: `sanitize_test.go`
 
-- [ ] **Step 1: Update existing test expectations that change**
+- [x] **Step 1: Update existing test expectations that change**
 
 In `sanitize_test.go`, update these cases:
 
@@ -247,7 +243,7 @@ And update the interim multi-extension case from Task 1:
 {"My.Config.File.txt", "my-config.file.txt"},
 ```
 
-- [ ] **Step 2: Add new test cases for expanded separators**
+- [x] **Step 2: Add new test cases for expanded separators**
 
 ```go
 // New separators (v2)
@@ -261,12 +257,12 @@ And update the interim multi-extension case from Task 1:
 {"a{b}", "a-b"},
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `go test -run TestSanitize -v ./...`
 Expected: New separator tests fail (parens, brackets, etc. currently stripped, not converted to hyphens). Updated expectations for `foo(bar)` and `My File (2024).txt` also fail.
 
-- [ ] **Step 4: Expand separator list and update character filter**
+- [x] **Step 4: Expand separator list and update character filter**
 
 In `sanitize.go`, update the separator replacement (step 5/step 7 in the pipeline):
 
@@ -296,12 +292,12 @@ name = strings.Map(func(r rune) rune {
 
 Note the removal of `|| r == '.'` from the filter — periods in stem are now converted to hyphens at step 7, and any remaining periods are stripped.
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `go test -run TestSanitize -v ./...`
 Expected: All tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add sanitize.go sanitize_test.go
@@ -310,14 +306,12 @@ git commit -m "feat: expanded separator list and period-in-stem handling"
 
 ---
 
-## Task 3: Sanitize — URL Decoding, Accent Normalization, Special Replacements
-
 **Files:**
 
 - Modify: `sanitize.go`
 - Modify: `sanitize_test.go`
 
-- [ ] **Step 1: Update existing accent test expectations**
+- [x] **Step 1: Update existing accent test expectations**
 
 ```go
 // Was: {"café", "caf"}
@@ -327,7 +321,7 @@ git commit -m "feat: expanded separator list and period-in-stem handling"
 {"naïve", "naive"},
 ```
 
-- [ ] **Step 2: Add new test cases for URL decoding, accents, and special replacements**
+- [x] **Step 2: Add new test cases for URL decoding, accents, and special replacements**
 
 ```go
 // URL decoding (v2 step 0)
@@ -347,12 +341,12 @@ git commit -m "feat: expanded separator list and period-in-stem handling"
 {"@foo.txt", "at-foo.txt"},
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run: `go test -run TestSanitize -v ./...`
 Expected: All new tests and updated accent tests fail.
 
-- [ ] **Step 4: Implement accent normalization map**
+- [x] **Step 4: Implement accent normalization map**
 
 Add to `sanitize.go` at package level:
 
@@ -391,7 +385,7 @@ func normalizeAccents(s string) string {
 }
 ```
 
-- [ ] **Step 5: Implement URL decoding and special replacements; wire all new steps into `Sanitize`**
+- [x] **Step 5: Implement URL decoding and special replacements; wire all new steps into `Sanitize`**
 
 Add import `"net/url"` to `sanitize.go`.
 
@@ -472,12 +466,12 @@ func Sanitize(name string) string {
 }
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `go test -run TestSanitize -v ./...`
 Expected: All tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add sanitize.go sanitize_test.go
@@ -486,14 +480,12 @@ git commit -m "feat: URL decoding, accent normalization, and special replacement
 
 ---
 
-## Task 4: ShouldIgnore
-
 **Files:**
 
 - Create: `ignore.go`
 - Create: `ignore_test.go`
 
-- [ ] **Step 1: Write `TestShouldIgnore` with table-driven tests**
+- [x] **Step 1: Write `TestShouldIgnore` with table-driven tests**
 
 Create `ignore_test.go`:
 
@@ -570,12 +562,12 @@ func TestShouldIgnore(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `go test -run TestShouldIgnore -v ./...`
 Expected: Compilation error — `ShouldIgnore` not defined.
 
-- [ ] **Step 3: Implement `ShouldIgnore` in `ignore.go`**
+- [x] **Step 3: Implement `ShouldIgnore` in `ignore.go`**
 
 Create `ignore.go`:
 
@@ -635,12 +627,12 @@ func allCaps(s string) bool {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `go test -run TestShouldIgnore -v ./...`
 Expected: All pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add ignore.go ignore_test.go
@@ -648,8 +640,6 @@ git commit -m "feat: ShouldIgnore predicate for ignore patterns"
 ```
 
 ---
-
-## Task 5: renameOpts Struct and Output Infrastructure
 
 **Files:**
 
@@ -659,7 +649,7 @@ git commit -m "feat: ShouldIgnore predicate for ignore patterns"
 
 This task defines the `renameOpts` struct, introduces package-level `stdout`/`stderr` writers for testability, updates all existing test call sites, and updates `main.go` call sites to bridge old flags to new struct. No behavior changes yet — purely mechanical refactor.
 
-- [ ] **Step 1: Add `renameOpts` struct and output writers to `rename.go`**
+- [x] **Step 1: Add `renameOpts` struct and output writers to `rename.go`**
 
 Add at the top of `rename.go`, after imports:
 
@@ -681,7 +671,7 @@ type renameOpts struct {
 
 Add `"io"` to the import block.
 
-- [ ] **Step 2: Update `runRename` signature and call sites**
+- [x] **Step 2: Update `runRename` signature and call sites**
 
 Change `runRename` signature from:
 
@@ -697,7 +687,7 @@ func runRename(input string, opts renameOpts) error {
 
 Inside the function body, replace `dryRun` with `opts.dryRun` and `quiet` with `opts.quiet`. Replace `fmt.Printf` / `fmt.Println` with `fmt.Fprintf(stdout, ...)` / `fmt.Fprintln(stdout, ...)`. Keep v1 output behavior for now (changed in Task 6).
 
-- [ ] **Step 3: Update `runRecursive` signature**
+- [x] **Step 3: Update `runRecursive` signature**
 
 Change from:
 
@@ -713,7 +703,7 @@ func runRecursive(target string, opts renameOpts) error {
 
 Update the `runRename` call inside to pass `opts`.
 
-- [ ] **Step 4: Update `main.go` call sites**
+- [x] **Step 4: Update `main.go` call sites**
 
 Bridge the old flag values into the new struct:
 
@@ -729,7 +719,7 @@ if err := runRename(input, rOpts); err != nil {
 
 Note: avoid variable shadowing — use `rOpts` for `renameOpts` to distinguish from the CLI `options` struct.
 
-- [ ] **Step 5: Update all existing tests in `rename_test.go`**
+- [x] **Step 5: Update all existing tests in `rename_test.go`**
 
 Mechanical replacement:
 
@@ -761,12 +751,12 @@ runRecursive(dir, renameOpts{})
 
 Add `"bytes"` to the import block for the output capture helper used in later tasks.
 
-- [ ] **Step 6: Run all tests**
+- [x] **Step 6: Run all tests**
 
 Run: `go test -v ./...`
 Expected: All tests pass (pure refactor, no behavior change).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add rename.go rename_test.go main.go
@@ -775,8 +765,6 @@ git commit -m "refactor: renameOpts struct and output writer infrastructure"
 
 ---
 
-## Task 6: Rename Behavior Changes
-
 **Files:**
 
 - Modify: `rename.go`
@@ -784,7 +772,7 @@ git commit -m "refactor: renameOpts struct and output writer infrastructure"
 
 This task implements: clobber error, output mode changes (default/quiet/verbose), dry-run format change, already-clean behavior changes, ShouldIgnore integration, and continue-on-error in `runRecursive`.
 
-- [ ] **Step 1: Add output capture helper to `rename_test.go`**
+- [x] **Step 1: Add output capture helper to `rename_test.go`**
 
 ```go
 func captureOutput(t *testing.T, fn func()) string {
@@ -798,7 +786,7 @@ func captureOutput(t *testing.T, fn func()) string {
 }
 ```
 
-- [ ] **Step 2: Write failing test for clobber error**
+- [x] **Step 2: Write failing test for clobber error**
 
 Update `TestRunRename_NoClobber`:
 
@@ -827,7 +815,7 @@ func TestRunRename_NoClobber(t *testing.T) {
 }
 ```
 
-- [ ] **Step 3: Write failing tests for output modes**
+- [x] **Step 3: Write failing tests for output modes**
 
 ```go
 func TestRunRename_DefaultOutput(t *testing.T) {
@@ -878,7 +866,7 @@ func TestRunRename_QuietOutput(t *testing.T) {
 }
 ```
 
-- [ ] **Step 4: Write failing tests for dry-run format**
+- [x] **Step 4: Write failing tests for dry-run format**
 
 ```go
 func TestRunRename_DryRunFormat(t *testing.T) {
@@ -898,7 +886,7 @@ func TestRunRename_DryRunFormat(t *testing.T) {
 }
 ```
 
-- [ ] **Step 5: Write failing tests for already-clean behavior**
+- [x] **Step 5: Write failing tests for already-clean behavior**
 
 ```go
 func TestRunRename_AlreadyClean_Default(t *testing.T) {
@@ -935,7 +923,7 @@ func TestRunRename_AlreadyClean_Verbose(t *testing.T) {
 }
 ```
 
-- [ ] **Step 6: Write failing tests for ShouldIgnore integration**
+- [x] **Step 6: Write failing tests for ShouldIgnore integration**
 
 ```go
 func TestRunRename_Ignored(t *testing.T) {
@@ -967,12 +955,12 @@ func TestRunRename_Ignored_Force(t *testing.T) {
 }
 ```
 
-- [ ] **Step 7: Run tests to see failures**
+- [x] **Step 7: Run tests to see failures**
 
 Run: `go test -run TestRunRename -v ./...`
 Expected: Multiple failures — clobber still returns nil, output modes wrong, already-clean doesn't print, no ignore integration.
 
-- [ ] **Step 8: Implement all behavior changes in `runRename`**
+- [x] **Step 8: Implement all behavior changes in `runRename`**
 
 Rewrite `runRename` in `rename.go`:
 
@@ -1031,7 +1019,7 @@ func runRename(input string, opts renameOpts) error {
 }
 ```
 
-- [ ] **Step 9: Update `runRecursive` to continue on error**
+- [x] **Step 9: Update `runRecursive` to continue on error**
 
 Add a sentinel for interactive quit (will be used in Task 7):
 
@@ -1085,12 +1073,12 @@ func runRecursive(target string, opts renameOpts) error {
 }
 ```
 
-- [ ] **Step 10: Run all tests**
+- [x] **Step 10: Run all tests**
 
 Run: `go test -v ./...`
 Expected: All tests pass.
 
-- [ ] **Step 11: Commit**
+- [x] **Step 11: Commit**
 
 ```bash
 git add rename.go rename_test.go
@@ -1099,14 +1087,12 @@ git commit -m "feat: clobber error, output modes, dry-run format, ShouldIgnore i
 
 ---
 
-## Task 7: Interactive Prompt
-
 **Files:**
 
 - Modify: `rename.go`
 - Modify: `rename_test.go`
 
-- [ ] **Step 1: Write failing tests for interactive mode**
+- [x] **Step 1: Write failing tests for interactive mode**
 
 ```go
 func TestRunRename_Interactive_Accept(t *testing.T) {
@@ -1151,12 +1137,12 @@ func TestRunRename_Interactive_Quit(t *testing.T) {
 
 Add `"errors"` to the test file imports.
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `go test -run TestRunRename_Interactive -v ./...`
 Expected: Fails — interactive prompt not implemented.
 
-- [ ] **Step 3: Implement `promptRename` function and integrate into `runRename`**
+- [x] **Step 3: Implement `promptRename` function and integrate into `runRename`**
 
 Add to `rename.go`:
 
@@ -1219,12 +1205,12 @@ In `runRename`, add the interactive prompt after the dry-run check and before th
 	if err := os.Rename(input, output); err != nil {
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `go test -v ./...`
 Expected: All tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add rename.go rename_test.go
@@ -1232,8 +1218,6 @@ git commit -m "feat: interactive prompt for rename confirmation"
 ```
 
 ---
-
-## Task 8: pflag Migration and CLI Overhaul
 
 **Files:**
 
@@ -1425,8 +1409,6 @@ git commit -m "feat: pflag migration, stdin detection, multi-arg support"
 ```
 
 ---
-
-## Task 9: Integration Tests and README
 
 **Files:**
 

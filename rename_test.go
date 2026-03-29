@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -271,6 +272,45 @@ func TestRunRecursive_SkipsGit(t *testing.T) {
 	assertExists(t, filepath.Join(dir, ".git", "HEAD"))
 	// Regular file renamed
 	assertExists(t, filepath.Join(dir, "my-file.txt"))
+}
+
+func TestRunRename_Interactive_Accept(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "My File.txt")
+	writeFile(t, src, "content")
+
+	opts := renameOpts{interactive: true, input: strings.NewReader("y\n")}
+	if err := runRename(src, opts); err != nil {
+		t.Fatal(err)
+	}
+	assertExists(t, filepath.Join(dir, "my-file.txt"))
+	assertNotExists(t, src)
+}
+
+func TestRunRename_Interactive_Skip(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "My File.txt")
+	writeFile(t, src, "content")
+
+	opts := renameOpts{interactive: true, input: strings.NewReader("n\n")}
+	if err := runRename(src, opts); err != nil {
+		t.Fatal(err)
+	}
+	assertExists(t, src)
+	assertNotExists(t, filepath.Join(dir, "my-file.txt"))
+}
+
+func TestRunRename_Interactive_Quit(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "My File.txt")
+	writeFile(t, src, "content")
+
+	opts := renameOpts{interactive: true, input: strings.NewReader("q\n")}
+	err := runRename(src, opts)
+	if !errors.Is(err, errQuit) {
+		t.Fatalf("expected errQuit, got %v", err)
+	}
+	assertExists(t, src)
 }
 
 // helpers
