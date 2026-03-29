@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -14,6 +15,8 @@ var (
 	stderr io.Writer = os.Stderr
 )
 
+var errQuit = errors.New("quit")
+
 type renameOpts struct {
 	dryRun      bool
 	quiet       bool
@@ -24,11 +27,16 @@ type renameOpts struct {
 }
 
 // runRename sanitizes the basename of input and renames it in-place.
-// It silently skips if the name is already clean or the target already exists
-// (as a different file). Returns an error only if the rename itself fails.
+// Returns an error if the rename fails or if the target would clobber an existing file.
 func runRename(input string, opts renameOpts) error {
 	dir := filepath.Dir(input)
 	base := filepath.Base(input)
+
+	// Ignore check (before sanitize)
+	if !opts.force && ShouldIgnore(base) {
+		return nil
+	}
+
 	sanitized := Sanitize(base)
 
 	var output string
@@ -38,33 +46,37 @@ func runRename(input string, opts renameOpts) error {
 		output = filepath.Join(dir, sanitized)
 	}
 
-	// Already clean — silent skip
+	// Already clean
 	if input == output {
+		if !opts.quiet && !opts.verbose {
+			fmt.Fprintln(stdout, output)
+		}
 		return nil
 	}
 
-	// No-clobber check: if target exists and is a different file, skip silently.
-	// Use os.SameFile to allow case-only renames (e.g. FOO → foo) on
-	// case-insensitive filesystems where Lstat("foo") succeeds when "FOO" exists.
+	// Clobber check
 	if _, err := os.Lstat(output); err == nil {
 		if !sameFile(input, output) {
-			return nil
+			return fmt.Errorf("mud: %s: target already exists: %s", input, output)
 		}
 	}
 
+	// Dry run
 	if opts.dryRun {
-		fmt.Fprintf(stdout, "%s --> %s\n(dry run)\n", input, output)
+		fmt.Fprintf(stdout, "%s -> %s (dry run)\n", input, output)
 		return nil
 	}
 
+	// Rename
 	if err := os.Rename(input, output); err != nil {
 		return err
 	}
 
-	if opts.quiet {
-		fmt.Fprintln(stdout, output)
-	} else {
+	// Output
+	if opts.verbose {
 		fmt.Fprintf(stdout, "%s -> %s\n", input, output)
+	} else if !opts.quiet {
+		fmt.Fprintln(stdout, output)
 	}
 	return nil
 }
@@ -84,7 +96,8 @@ func sameFile(a, b string) bool {
 
 // runRecursive renames all files and directories under target (default "."),
 // processing children before parents (bottom-up) so parent renames don't
-// invalidate child paths.
+// invalidate child paths. Errors during individual file renames are logged to stderr
+// and don't stop processing, but the first error is returned at the end.
 func runRecursive(target string, opts renameOpts) error {
 	if target == "" {
 		target = "."
@@ -95,7 +108,6 @@ func runRecursive(target string, opts renameOpts) error {
 		if err != nil {
 			return err
 		}
-		// Skip the root itself and .git directories
 		if path == target {
 			return nil
 		}
@@ -109,13 +121,19 @@ func runRecursive(target string, opts renameOpts) error {
 		return err
 	}
 
-	// Sort reverse so deepest paths come first (bottom-up traversal)
 	sort.Sort(sort.Reverse(sort.StringSlice(paths)))
 
+	var firstErr error
 	for _, p := range paths {
 		if err := runRename(p, opts); err != nil {
-			return fmt.Errorf("%s: %w", p, err)
+			if errors.Is(err, errQuit) {
+				return nil // user quit — not an error
+			}
+			fmt.Fprintf(stderr, "mud: %s\n", err)
+			if firstErr == nil {
+				firstErr = err
+			}
 		}
 	}
-	return nil
+	return firstErr
 }
