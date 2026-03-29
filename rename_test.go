@@ -344,3 +344,55 @@ func assertNotExists(t *testing.T, path string) {
 		t.Errorf("expected %s to not exist", path)
 	}
 }
+
+func TestRunRecursive_IgnoresDotfilesAndSpecialFiles(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, ".hidden"), "hidden")
+	writeFile(t, filepath.Join(dir, "README.md"), "readme")
+	writeFile(t, filepath.Join(dir, "CHANGELOG"), "changelog")
+
+	if err := runRecursive(dir, renameOpts{}); err != nil {
+		t.Fatal(err)
+	}
+
+	// All should remain untouched (ignored)
+	assertExists(t, filepath.Join(dir, ".hidden"))
+	assertExists(t, filepath.Join(dir, "README.md"))
+	assertExists(t, filepath.Join(dir, "CHANGELOG"))
+}
+
+func TestRunRecursive_RenamesNormalFiles(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "My File.txt"), "content")
+
+	if err := runRecursive(dir, renameOpts{}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Non-ignored file renamed
+	assertExists(t, filepath.Join(dir, "my-file.txt"))
+}
+
+func TestRunRecursive_ForceOverridesIgnore(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "CHANGELOG.md"), "# Changelog")
+
+	if err := runRecursive(dir, renameOpts{force: true}); err != nil {
+		t.Fatal(err)
+	}
+
+	// After forcing, the file should be renamed (sanitized)
+	assertExists(t, filepath.Join(dir, "changelog.md"))
+}
+
+func TestRunRecursive_ContinuesOnError(t *testing.T) {
+	dir := t.TempDir()
+	// Create two files that would produce the same sanitized name
+	writeFile(t, filepath.Join(dir, "My File.txt"), "first")
+	writeFile(t, filepath.Join(dir, "my-file.txt"), "existing")
+
+	err := runRecursive(dir, renameOpts{})
+	if err == nil {
+		t.Fatal("expected error from clobber, got nil")
+	}
+}
