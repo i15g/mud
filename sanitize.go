@@ -2,6 +2,38 @@ package main
 
 import "strings"
 
+// isAlphanumeric returns true if s contains only [a-zA-Z0-9] characters.
+func isAlphanumeric(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9')) {
+			return false
+		}
+	}
+	return true
+}
+
+// extractExtensions splits name into stem and up to 2 trailing dot-extensions.
+// A dot-segment qualifies only if it consists entirely of [a-zA-Z0-9].
+func extractExtensions(name string) (string, string) {
+	remaining := name
+	collected := ""
+	for range 2 {
+		i := strings.LastIndex(remaining, ".")
+		if i < 0 {
+			break
+		}
+		if !isAlphanumeric(remaining[i+1:]) {
+			break
+		}
+		collected = remaining[i:] + collected
+		remaining = remaining[:i]
+	}
+	return remaining, collected
+}
+
 // Sanitize converts a filename (or text) to a URL-friendly format:
 //   - Lowercase
 //   - Spaces, newlines, underscores, commas, plus signs → hyphens
@@ -17,12 +49,9 @@ func Sanitize(name string) string {
 		name = name[1:]
 	}
 
-	// 2. Extract last extension (only from remaining name, after dots stripped)
+	// 2. Extract up to 2 trailing extensions (only alphanumeric segments)
 	var ext string
-	if i := strings.LastIndex(name, "."); i >= 0 {
-		ext = name[i:] // includes the dot
-		name = name[:i]
-	}
+	name, ext = extractExtensions(name)
 
 	// 3. Strip leading underscores from stem
 	var leadingUnderscores string

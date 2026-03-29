@@ -76,6 +76,13 @@ func TestSanitize(t *testing.T) {
 		// Empty after sanitize (edge case: input is just hyphens)
 		{"---", ""},
 		{"-", ""},
+
+		// Multi-extension (v2)
+		{"foo.tar.gz", "foo.tar.gz"},
+		{"My.Config.File.txt", "my.config.file.txt"},                   // updated to my-config.file.txt in Task 2
+		{"hello world.foo bar baz.txt", "hello-world.foo-bar-baz.txt"}, // updated to hello-world-foo-bar-baz.txt in Task 2
+		{"archive.tar.GZ", "archive.tar.gz"},
+		{"_.txt", "_.txt"},
 	}
 
 	for _, tt := range tests {
