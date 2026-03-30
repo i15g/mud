@@ -19,8 +19,9 @@
       }
     ]
   },
-  "plansDirectory": "./docs/plans",
   "enabledPlugins": {
-    "gopls-lsp@claude-plugins-official": true
-  }
+    "gopls-lsp@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true
+  },
+  "plansDirectory": "./docs/plans"
 }
