@@ -8,6 +8,8 @@ repos:
       - id: mixed-line-ending
       - id: trailing-whitespace
 
+    # TODO dnephin/pre-commit-golang is archived
+    # https://github.com/TekWizely/pre-commit-golang ?
   - repo: https://github.com/dnephin/pre-commit-golang
     rev: v0.5.1
     hooks:
