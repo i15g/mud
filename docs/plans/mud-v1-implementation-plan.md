@@ -1,18 +1,18 @@
 ---
-title: mud v2 Implementation Plan
+title: mud v1 Implementation Plan
 status: done
 notes: implemented by Copilot CLI using Claude Haiku 4.5
 ---
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement all v2 features: expanded sanitize pipeline (URL-decode, accents, multi-extension, special replacements, new separators), ignore patterns, renameOpts refactor, pflag migration, stdin detection, multi-arg, interactive mode.
+**Goal:** Implement all v1 features: expanded sanitize pipeline (URL-decode, accents, multi-extension, special replacements, new separators), ignore patterns, renameOpts refactor, pflag migration, stdin detection, multi-arg, interactive mode.
 
 **Architecture:** Same 4-file `package main` structure. `Sanitize()` is a pure pipeline function. `ShouldIgnore()` is a new pure predicate. `runRename`/`runRecursive` take a `renameOpts` struct. `main.go` uses `github.com/spf13/pflag` for flag parsing and an extracted `run()` function for testability.
 
 **Tech Stack:** Go 1.26, `github.com/spf13/pflag`, `net/url` (stdlib)
 
-**Spec:** `docs/specs/v2.md` is the authoritative reference for all behavior.
+**Spec:** `docs/specs/v1.md` is the authoritative reference for all behavior.
 
 ---
 
@@ -41,7 +41,7 @@ notes: implemented by Copilot CLI using Claude Haiku 4.5
 Add these cases to the `tests` slice in `TestSanitize`:
 
 ```go
-// Multi-extension (v2)
+// Multi-extension (v1)
 {"foo.tar.gz", "foo.tar.gz"},
 {"My.Config.File.txt", "my-config.file.txt"},
 {"hello world.foo bar baz.txt", "hello-world-foo-bar-baz.txt"},
@@ -62,7 +62,7 @@ Actually, to keep tests green at each commit, use the interim expectation:
 - [x] **Step 2: Run tests to verify they fail**
 
 Run: `go test -run TestSanitize -v ./...`
-Expected: `foo.tar.gz` may already pass (coincidence — v1 extracts `.gz`, stem `foo.tar`, period preserved). `My.Config.File.txt` will fail. `hello world.foo bar baz.txt` will fail.
+Expected: `foo.tar.gz` may already pass (coincidence — v0 extracts `.gz`, stem `foo.tar`, period preserved). `My.Config.File.txt` will fail. `hello world.foo bar baz.txt` will fail.
 
 - [x] **Step 3: Implement `extractExtensions` helper and `isAlphanumeric` helper**
 
@@ -250,7 +250,7 @@ And update the interim multi-extension case from Task 1:
 - [x] **Step 2: Add new test cases for expanded separators**
 
 ```go
-// New separators (v2)
+// New separators (v1)
 {"foo(bar).txt", "foo-bar.txt"},
 {"foo[1].txt", "foo-1.txt"},
 {"a;b", "a-b"},
@@ -328,18 +328,18 @@ git commit -m "feat: expanded separator list and period-in-stem handling"
 - [x] **Step 2: Add new test cases for URL decoding, accents, and special replacements**
 
 ```go
-// URL decoding (v2 step 0)
+// URL decoding (v1 step 0)
 {"hello%20world.txt", "hello-world.txt"},
 {"foo%28bar%29.txt", "foo-bar.txt"},
 
-// Accent normalization (v2 step 1)
+// Accent normalization (v1 step 1)
 {"\u00c9tude.txt", "etude.txt"},     // É → e
 {"stra\u00dfe", "strasse"},           // ß → ss
 {"pi\u00f1ata", "pinata"},            // ñ → n
 {"fa\u00e7ade", "facade"},            // ç → c
 {"\u00e0 la carte", "a-la-carte"},    // à → a
 
-// Special replacements (v2 step 6)
+// Special replacements (v1 step 6)
 {"foo@bar", "foo-at-bar"},
 {"a&b", "a-and-b"},
 {"@foo.txt", "at-foo.txt"},
@@ -1473,7 +1473,7 @@ Expected: All pass.
 
 - [x] **Step 3: Update README.md**
 
-Update the usage examples and flag documentation to reflect v2 changes:
+Update the usage examples and flag documentation to reflect v1 changes:
 
 - Replace `-d` with `-n` for dry-run
 - Remove `-t` / `--text`
@@ -1485,7 +1485,7 @@ Update the usage examples and flag documentation to reflect v2 changes:
 
 ```bash
 git add rename_test.go README.md
-git commit -m "feat: integration tests and updated README for v2"
+git commit -m "feat: integration tests and updated README for v1"
 ```
 
 ---
