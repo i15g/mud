@@ -2,17 +2,26 @@
 
 ## prek
 
+- https://prek.j178.dev/ (pre-commit alternative)
+- Hooks in `.pre-commit-config.yaml`
+
 ```sh
 # Install git hooks:
 prek install
 # Update hook revs:
 prek auto-update --cooldown-days 30
+
+prek #same as prek run
+prek run --all-files
 ```
 
 ## Tests
 
 ```sh
 go test .
+go test -run TestName .  # single test
+go vet ./...
+gofmt -w .
 ```
 
 ## Build

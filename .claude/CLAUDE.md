@@ -1,4 +1,12 @@
-### [Code Intelligence](/search_kw/8daff5985d71cb3ccef4c57533004215)
+- @README.md
+- @docs/development.md
+
+### Claude Hooks
+
+- **post-tool-use-go-test** — after editing a `.go` source file, runs `go test` in that package and surfaces failures as context
+- **post-tool-use-prek** — after any file edit, runs `prek run --files <path>` to auto-apply pre-commit hooks
+
+## Code Intelligence
 
 Prefer LSP over Grep/Read for code navigation — it's faster, precise, and avoids reading entire files:
 
@@ -9,4 +17,4 @@ Prefer LSP over Grep/Read for code navigation — it's faster, precise, and avoi
 
 Use Grep only when LSP isn't available or for text/pattern searches (comments, strings, config).
 
-After writing or editing code, check [LSP diagnostics](/search_kw/2c6f1042e8082ae61b79e6f7345ba173) and fix errors before proceeding.
+After writing or editing code, check LSP diagnostics and fix errors before proceeding.

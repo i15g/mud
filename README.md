@@ -62,6 +62,8 @@ Rename all files, ignoring errors (continue on clobber):
 mud -r ./docs
 ```
 
+See [v1.md](docs/specs/v1.md) for full spec.
+
 ## License
 
 MIT
