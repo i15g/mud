@@ -36,6 +36,12 @@ go clean -i -x .
 ## Release
 
 ```sh
-git tag v0.1.0
+git tag v1.0.0
 git push --tags
+```
+
+Kick the module proxy to index the new version immediately:
+
+```sh
+curl "https://proxy.golang.org/github.com/i15g/mud/@v/v1.0.0.info"
 ```
