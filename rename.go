@@ -57,7 +57,7 @@ func runRename(input string, opts renameOpts) error {
 	// Clobber check
 	if _, err := os.Lstat(output); err == nil {
 		if !sameFile(input, output) {
-			return fmt.Errorf("mud: %s: target already exists: %s", input, output)
+			return fmt.Errorf("%s: target already exists: %s", input, output)
 		}
 	}
 
