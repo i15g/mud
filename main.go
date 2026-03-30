@@ -5,9 +5,17 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 
 	"github.com/spf13/pflag"
 )
+
+var version = func() string {
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" {
+		return info.Main.Version
+	}
+	return "dev"
+}()
 
 func run(args []string, stdin io.Reader, isTTY bool) int {
 	fs := pflag.NewFlagSet("mud", pflag.ContinueOnError)
@@ -21,6 +29,7 @@ func run(args []string, stdin io.Reader, isTTY bool) int {
 		force       bool
 		recursive   bool
 		help        bool
+		showVersion bool
 	)
 
 	fs.BoolVarP(&dryRun, "dry-run", "n", false, "Show what would be renamed without renaming")
@@ -30,10 +39,16 @@ func run(args []string, stdin io.Reader, isTTY bool) int {
 	fs.BoolVarP(&force, "force", "f", false, "Bypass ignore patterns")
 	fs.BoolVarP(&recursive, "recursive", "r", false, "Rename all files/dirs under path (bottom-up)")
 	fs.BoolVarP(&help, "help", "h", false, "Show help")
+	fs.BoolVar(&showVersion, "version", false, "Print version and exit")
 
 	fs.SetOutput(stderr)
 	if err := fs.Parse(args); err != nil {
 		return 1
+	}
+
+	if showVersion {
+		fmt.Fprintf(stderr, "mud %s\n", version)
+		return 0
 	}
 
 	if help {
@@ -107,12 +122,7 @@ func run(args []string, stdin io.Reader, isTTY bool) int {
 }
 
 func printUsage(fs *pflag.FlagSet) {
-	fmt.Fprint(stderr, `Usage: mud [flags] <file>...
-
-Rename files to URL-friendly format.
-
-Flags:
-`)
+	fmt.Fprintf(stderr, "Usage: mud %s [flags] <file>...\n\nRename files to URL-friendly format.\n\nFlags:\n", version)
 	fs.PrintDefaults()
 	fmt.Fprint(stderr, `
 Examples:
