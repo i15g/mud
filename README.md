@@ -64,6 +64,11 @@ mud -r ./docs
 
 See [v1.md](docs/specs/v1.md) for full spec.
 
+## TODO
+
+- CI: add `jdx/mise-action` (`install_args: --locked`) before prek and drop `setup-go`. Hooks call `mise exec --`,
+  which the runner lacks
+
 ## License
 
 MIT
