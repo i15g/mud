@@ -1,0 +1,13 @@
+# Repo-local tools. Pinned here so dev/hooks don't depend on the global mise config.
+[tools]
+go = "1.27"
+"go:golang.org/x/tools/gopls" = "0.24.0"
+
+# Node: prek's prettier hook runs `npx prettier`
+node = "24"
+
+# Standalone binaries (aqua; checksums in mise.lock)
+prek = "0.5.7"
+
+[settings]
+lockfile = true # mise.lock is committed; mise install --locked replays it
