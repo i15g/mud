@@ -1,5 +1,6 @@
 - @README.md
 - @docs/development.md
+- Public repo: commits, docs and comments must not mention private things (dotfiles, machines, local paths, other repos)
 
 ### Claude Hooks
 
