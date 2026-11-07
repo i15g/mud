@@ -10,18 +10,27 @@ repos:
       - id: mixed-line-ending
       - id: trailing-whitespace
 
-    # TODO dnephin/pre-commit-golang is archived
-    # https://github.com/TekWizely/pre-commit-golang ?
-  - repo: https://github.com/dnephin/pre-commit-golang
-    rev: v0.5.1
-    hooks:
-      - id: go-build
-      - id: go-fmt
-      - id: go-unit-tests
-      - id: go-vet
-
+  # `mise exec -- <tool>`: tool pinned in mise.toml, regardless of PATH
   - repo: local
     hooks:
+      # vet + test already compile, so no separate go build
+      - id: go-fmt
+        name: gofmt
+        entry: mise exec -- gofmt -l -w
+        language: system
+        types: [go]
+      - id: go-vet
+        name: go vet
+        entry: mise exec -- go vet ./...
+        language: system
+        types: [go]
+        pass_filenames: false
+      - id: go-test
+        name: go test
+        entry: mise exec -- go test ./...
+        language: system
+        types: [go]
+        pass_filenames: false
       - id: prettier
         name: prettier
         entry: mise exec -- prettier --write
