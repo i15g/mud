@@ -1,10 +1,11 @@
 # Repo-local tools. Pinned here so dev/hooks don't depend on the global mise config.
 [tools]
-go = "1.27"
+go = "1.26" # match go.mod + CI setup-go
 "go:golang.org/x/tools/gopls" = "0.24.0"
 
-# Node: prek's prettier hook runs `npx prettier`
+# Node: npm-backend tools run on this node
 node = "24"
+prettier = "3.8.1" # npm:prettier; aube-lock in .mise/locks/
 
 # Standalone binaries (aqua; checksums in mise.lock)
 prek = "0.5.7"
