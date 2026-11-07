@@ -1,5 +1,18 @@
 # Development
 
+## mise
+
+- https://mise.jdx.dev/ (tool version manager)
+- `mise.toml` pins go, gopls, node, prettier, prek; `mise.lock` (+ `.mise/locks/`) holds checksums. Commit all
+- prek hooks call tools via `mise exec --`, so they use these pins regardless of PATH
+
+```sh
+mise trust               # once per clone
+mise install --locked    # install pinned tools
+mise lock                # refresh lockfile after editing mise.toml
+mise up                  # bump versions
+```
+
 ## prek
 
 - https://prek.j178.dev/ (pre-commit alternative)
@@ -29,7 +42,7 @@ gofmt -w .
 ```sh
 # Compile binary to project dir:
 go build -o mud .
-./mud -t "My File (2024).txt"
+./mud -n "My File (2024).txt"
 ```
 
 ## Install locally
@@ -37,7 +50,7 @@ go build -o mud .
 ```sh
 # Compile and install to $GOPATH/bin:
 go install .
-mud -t "My File (2024).txt"
+mud -n "My File (2024).txt"
 # Clean:
 go clean -i -x .
 ```
